@@ -4,14 +4,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuratController;
 use App\Http\Controllers\PendudukController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\ProfilDesaController; // <-- TAMBAHKAN INI
+use App\Http\Controllers\ProfilDesaController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
-// 1. GUEST AREA
+// 1. GUEST AREA (Bisa diakses tanpa login / publik)
 Route::get('/', function () {
     return redirect()->route('login');
 });
+
 Route::get('/login', function () {
     if (Auth::check()) return redirect()->route('dashboard');
     return view('auth.login');
@@ -33,8 +34,11 @@ Route::post('/logout', function (Request $request) {
     return redirect('/login');
 })->name('logout');
 
+// --- ROUTE UNTUK SCAN QR CODE (Sudah dipindah ke sini agar bebas akses) ---
+Route::get('/cek-surat/{kode}', [SuratController::class, 'cekKeaslian'])->name('surat.cek_keaslian');
 
-// 2. AUTH AREA (Sudah Login)
+
+// 2. AUTH AREA (Wajib Login Baru Bisa Masuk)
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', [SuratController::class, 'dashboard'])->name('dashboard');
@@ -52,7 +56,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('penduduk', PendudukController::class);
         Route::resource('surat', SuratController::class);
 
-        // --- TAMBAHKAN RUTE PROFIL DESA DI SINI ---
+        // --- RUTE PROFIL DESA ---
         Route::get('/profil-desa', [ProfilDesaController::class, 'index'])->name('profil.index');
         Route::post('/profil-desa', [ProfilDesaController::class, 'store'])->name('profil.store');
     });
@@ -62,6 +66,5 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cetak-semua-laporan', [SuratController::class, 'cetakSemua'])->name('surat.cetakSemua');
     Route::get('/cetak-surat/{id}', [SuratController::class, 'cetak'])->name('surat.cetak');
     Route::get('/export-surat', [SuratController::class, 'export'])->name('surat.export');
-    Route::post('/penduduk/import', [App\Http\Controllers\PendudukController::class, 'import'])->name('penduduk.import');
-    Route::get('/cek-surat/{kode}', [App\Http\Controllers\SuratController::class, 'cekKeaslian'])->name('surat.cek_keaslian');
+    Route::post('/penduduk/import', [PendudukController::class, 'import'])->name('penduduk.import');
 });

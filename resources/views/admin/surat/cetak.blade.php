@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Cetak Surat - {{ $item->penduduk->nama }}</title>
+    <title>Cetak Surat - {{ $item->status == 'disetujui' ? $item->penduduk->nama : 'Akses Ditolak' }}</title>
     <style>
         /* Pengaturan Kertas A4 agar pas 1 halaman */
         @page {
@@ -120,10 +120,34 @@
         .clear {
             clear: both;
         }
+
+        /* Style untuk halaman Error Peringatan */
+        .alert-danger {
+            border: 2px dashed #cc0000;
+            padding: 20px;
+            background-color: #fff5f5;
+            text-align: center;
+            margin-top: 50px;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .alert-danger h2 {
+            color: #cc0000;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 
 <body>
+    {{-- 🛡️ SISTEM PENGAMAN UTAMA: Cek Status Surat --}}
+    @if($item->status !== 'disetujui')
+    <div class="alert-danger">
+        <h2>⚠️ DOKUMEN TIDAK SAH!</h2>
+        <p>Surat Keterangan ini tidak dapat dicetak karena <strong>BELUM DISETUJUI</strong> atau <strong>DITOLAK</strong> oleh Kepala Desa.</p>
+        <p style="font-size: 9pt; color: #666; margin-top: 15px;">Sistem Administrasi Pelayanan Desa (SIAPDE)</p>
+    </div>
+    @else
+    {{-- JIKA STATUS DISETUJUI, MAKA KODE SURAT DI BAWAH INI BARU AKAN DIEKSEKUSI --}}
     @php
     $bulanIndo = ['01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April', '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus', '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'];
     $tglLahirRaw = \Carbon\Carbon::parse($item->penduduk->tgl_lahir);
@@ -228,6 +252,7 @@
         </div>
         <div class="clear"></div>
     </div>
+    @endif
 </body>
 
 </html>

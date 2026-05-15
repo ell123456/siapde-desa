@@ -57,12 +57,7 @@
                         <div class="form-row-classic">
                             <label class="label-classic">TANGGAL PENGAJUAN :</label>
                             <div class="input-classic">
-                                <div style="background: #f8fafc; padding: 10px 15px; border: 1px solid #d1d3e2; border-radius: 4px; display: inline-flex; align-items: center; gap: 10px; color: #5a5c69; font-weight: bold;">
-                                    <i class="fas fa-lock" style="font-size: 11px; color: #94a3b8;"></i>
-                                    {{ date('d/m/Y') }}
-                                    <span style="font-size: 9px; background: #eaecf4; color: #4e73df; padding: 2px 8px; border-radius: 3px; text-transform: uppercase;">Otomatis</span>
-                                </div>
-                                <input type="hidden" name="tanggal_pengajuan" value="{{ date('Y-m-d') }}">
+                                <input type="date" name="tanggal_pengajuan" id="tanggal_pengajuan" class="ctrl-classic" value="{{ date('Y-m-d') }}" required>
                             </div>
                         </div>
 
@@ -91,7 +86,6 @@
 </div>
 
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
 <style>
     .form-row-classic {
@@ -123,6 +117,13 @@
         border-radius: 4px;
         color: #6e707e;
         background-color: #fff;
+        box-sizing: border-box;
+        height: 38px;
+    }
+
+    /* Khusus textarea agar tingginya fleksibel tidak terkunci 38px */
+    textarea.ctrl-classic {
+        height: auto !important;
     }
 
     .ctrl-classic:focus {
@@ -131,23 +132,59 @@
         background-color: #fffde7;
     }
 
-    /* Sinkronisasi Select2 dengan Style Bos */
-    .select2-container--bootstrap-5 .select2-selection {
+    /* 🎨 KALIBRASI VISUAL SELECT2 (BIAR JADI KEMBAR IDENTIK SAMA JENIS SURAT) */
+    .select2-container--default .select2-selection--single {
+        display: block !important;
+        width: 100% !important;
+        height: 38px !important;
+        /* Tinggi disamakan persis */
+        padding: 5px 12px !important;
+        font-size: 14px !important;
         border: 1px solid #d1d3e2 !important;
+        /* Warna border disamakan */
         border-radius: 4px !important;
+        background-color: #fff !important;
+    }
+
+    /* Menghilangkan border bawaan fokus Select2 yang hitam tebal */
+    .select2-container--default .select2-selection--single:focus {
+        outline: none !important;
+    }
+
+    /* Efek teks di dalam box dropdown Select2 */
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #6e707e !important;
+        line-height: 26px !important;
+        padding-left: 0 !important;
+    }
+
+    /* Posisi panah kecil dropdown Select2 */
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+        right: 10px !important;
+    }
+
+    /* Efek Fokus Kuning Lembut saat Dropdown Pencarian Diklik Aktif */
+    .select2-container--default.select2-container--open .select2-selection--single {
+        border-color: #4e73df !important;
+        background-color: #fffde7 !important;
+        /* Efek fokus disamakan */
     }
 </style>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js" defer></script>
+
 <script>
-    $(document).ready(function() {
-        $('.select2-pencarian').select2({
-            theme: 'bootstrap-5',
-            placeholder: "-- Cari Nama atau NIK --",
-            allowClear: true,
-            width: '100%'
-        });
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            if (typeof window.jQuery !== 'undefined') {
+                window.jQuery('.select2-pencarian').select2({
+                    placeholder: "-- Cari Nama atau NIK --",
+                    allowClear: true,
+                    width: '100%'
+                });
+            }
+        }, 300);
     });
 </script>
 @endsection

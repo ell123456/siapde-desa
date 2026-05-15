@@ -24,7 +24,6 @@
         width: 100%;
         display: flex;
         align-items: center;
-        /* Padding 15px agar teks lurus dengan isi tabel yang rapat */
         padding: 0 15px;
         box-sizing: border-box;
         color: white;
@@ -64,7 +63,6 @@
         border-bottom: 2px solid #4e73df;
     }
 
-    /* TRIK SAKTI: Paksa kolom cuma selebar isinya */
     .fit-column {
         width: 1%;
         white-space: nowrap;
@@ -94,6 +92,32 @@
         font-size: 14px;
         letter-spacing: 0.5px;
     }
+
+    /* Style untuk Nomor Surat Resmi */
+    .no-surat-styling {
+        color: #4e73df;
+        font-weight: 700;
+        font-size: 12.5px;
+        background: #f0f4fe;
+        padding: 4px 10px;
+        border-radius: 6px;
+        display: inline-block;
+        border: 1px solid #d9e2fc;
+    }
+
+    /* Style Dropdown Saring Sebaris */
+    .saring-select-kustom {
+        height: 32px;
+        padding: 0 10px;
+        font-size: 11px;
+        font-weight: 800;
+        color: #4e73df;
+        border: 1px solid #d1d3e2;
+        border-radius: 6px;
+        background: white;
+        outline: none;
+        cursor: pointer;
+    }
 </style>
 
 <div class="siapde-container-full">
@@ -106,28 +130,44 @@
     ];
     @endphp
 
-    {{-- HEADER BARU: SEJAJAR LOGO --}}
     <div class="header-siapde-paten">
         <h4>ARSIP RIWAYAT SELURUH SURAT</h4>
     </div>
 
-    {{-- ACTION BAR - RAPAT SIDEBAR --}}
+    {{-- ACTION BAR SEBARIS --}}
     <div style="background: #f8f9fc; padding: 15px; border-bottom: 1px solid #eaecf4; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-        <div style="color: #858796; font-size: 12.5px; font-weight: 700;">
-            <i class="fas fa-info-circle text-primary"></i> Menampilkan dokumen administrasi yang telah selesai diproses.
+        <div style="display: flex; align-items: center; gap: 15px;">
+            
+            {{-- DROPDOWN FILTER KUSTOM (Urutan & Nama Disamakan 100% dengan Form Create) --}}
+            <select id="saringJenisSurat" class="saring-select-kustom">
+                <option value="">-- SEMUA JENIS SURAT --</option>
+                <option value="Surat Pengantar SKCK">Surat Pengantar SKCK</option>
+                <option value="Surat Keterangan Domisili">Surat Keterangan Domisili</option>
+                <option value="Surat Pengantar KTP">Surat Pengantar KTP</option>
+                <option value="Surat Keterangan Usaha">Surat Keterangan Usaha (SKU)</option>
+                <option value="Surat Keterangan Tidak Mampu">Surat Keterangan Tidak Mampu (SKTM)</option>
+                <option value="Surat Keterangan Kelahiran">Surat Keterangan Kelahiran</option>
+                <option value="Surat Keterangan Kematian">Surat Keterangan Kematian</option>
+                <option value="Surat Keterangan Ahli Waris">Surat Keterangan Ahli Waris</option>
+            </select>
+            
+            <div style="color: #858796; font-size: 12.5px; font-weight: 700;">
+                <i class="fas fa-info-circle text-primary"></i> Menampilkan dokumen administrasi yang telah selesai diproses.
+            </div>
         </div>
         <div style="background: white; color: #4e73df; padding: 8px 18px; border-radius: 50px; border: 1px solid #d1d3e2; font-weight: 800; font-size: 11.5px; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
             <i class="fas fa-file-invoice"></i> TOTAL: {{ $surats->count() }} DOKUMEN
         </div>
     </div>
 
-    {{-- TABLE AREA - JARAK SIDEBAR DIHAPUS --}}
+    {{-- TABLE AREA PRESISI --}}
     <div class="table-responsive" style="padding: 0 15px 40px 0;">
         <div style="background: white; border-radius: 0 12px 12px 0; border: 1px solid #eaecf4; border-left: none; overflow: hidden;">
             <table class="table-paten">
                 <thead>
                     <tr style="background: #f8f9fc;">
                         <th class="fit-column" style="text-align: center;">NO</th>
+                        <th class="fit-column" style="text-align: center;">NOMOR SURAT</th>
                         <th class="fit-column" style="text-align: center;">NIK</th>
                         <th style="text-align: left;">NAMA PENDUDUK</th>
                         <th style="text-align: left;">JENIS SURAT</th>
@@ -138,9 +178,13 @@
                 </thead>
                 <tbody>
                     @forelse($surats as $key => $item)
-                    <tr onmouseover="this.style.backgroundColor='#f8f9fc'" onmouseout="this.style.backgroundColor='transparent'">
+                    <tr class="baris-arsip-data" data-jenis="{{ $item->jenis_surat }}" onmouseover="this.style.backgroundColor='#f8f9fc'" onmouseout="this.style.backgroundColor='transparent'">
 
                         <td class="fit-column" align="center" style="font-weight: 700; color: #b7b9cc; font-size: 13px;">{{ $key + 1 }}</td>
+
+                        <td class="fit-column" align="center">
+                            <span class="no-surat-styling">140 / {{ str_pad($item->id_surat, 3, '0', STR_PAD_LEFT) }} / {{ date('Y') }}</span>
+                        </td>
 
                         <td class="fit-column" align="center">
                             <span class="nik-styling">{{ $item->penduduk->nik ?? '-' }}</span>
@@ -183,7 +227,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" align="center" style="padding: 120px; color: #b7b9cc; font-weight: 600; font-size: 14px;">
+                        <td colspan="8" align="center" style="padding: 120px; color: #b7b9cc; font-weight: 600; font-size: 14px;">
                             <i class="fas fa-folder-open fa-3x mb-3" style="opacity: 0.2; display: block;"></i>
                             Belum ada arsip riwayat surat ditemukan.
                         </td>
@@ -194,4 +238,25 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectSaring = document.getElementById('saringJenisSurat');
+        const semuaBaris = document.querySelectorAll('.baris-arsip-data');
+
+        selectSaring.addEventListener('change', function() {
+            const filterValue = this.value;
+            semuaBaris.forEach(row => {
+                const jenisSurat = row.getAttribute('data-jenis');
+                
+                // Trik pencarian text parsial agar teks "(SKU)" atau "(SKTM)" di database lo tetap lolos sensor
+                if (filterValue === "" || jenisSurat.includes(filterValue) || filterValue.includes(jenisSurat)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        });
+    });
+</script>
 @endsection
