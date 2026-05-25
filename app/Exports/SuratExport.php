@@ -2,42 +2,55 @@
 
 namespace App\Exports;
 
-use App\Models\Surat;
+use App\Models\Penduduk;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 
-class SuratExport implements FromCollection, WithHeadings
+class PendudukExport implements FromCollection, WithHeadings, WithMapping
 {
+    /**
+     * Ambil seluruh data penduduk dari database
+     */
     public function collection()
     {
-        // Ambil semua surat beserta relasi penduduk
-        return Surat::with('penduduk')
-            ->get()
-            ->map(function ($surat) {
-                return [
-                    'Nama Penduduk' => $surat->penduduk->nama ?? '-',
-                    'NIK' => $surat->penduduk->nik ?? '-',
-                    'Tempat/Tanggal Lahir' => ($surat->penduduk->tempat_lahir ?? '-') . ', ' . ($surat->penduduk->tanggal_lahir ?? '-'),
-                    'Alamat' => $surat->penduduk->alamat ?? '-',
-                    'Jenis Surat' => $surat->jenis_surat,
-                    'Tanggal Pengajuan' => $surat->tanggal_pengajuan,
-                    'Status' => $surat->status ?? 'Menunggu',
-                    'Keterangan' => $surat->keterangan ?? '-',
-                ];
-            });
+        return Penduduk::orderBy('nama', 'asc')->get();
     }
 
+    /**
+     * Set susunan Judul Kolom di baris pertama Excel lo
+     */
     public function headings(): array
     {
         return [
-            'Nama Penduduk',
             'NIK',
-            'Tempat/Tanggal Lahir',
-            'Alamat',
-            'Jenis Surat',
-            'Tanggal Pengajuan',
-            'Status',
-            'Keterangan'
+            'Nama Lengkap',
+            'Tempat Lahir',
+            'Tanggal Lahir',
+            'Jenis Kelamin',
+            'Agama',
+            'Status Perkawinan',
+            'Pekerjaan',
+            'Alamat Dusun'
+        ];
+    }
+
+    /**
+     * Atur pemetaan data kolom (Kunci utama anti-ilmiah disisipkan di sini)
+     */
+    public function map($penduduk): array
+    {
+        return [
+            // KUNCI SAKTI: Tambah tanda petik satu didepan NIK agar Excel membacanya sebagai TEXT utuh murni
+            "'" . $penduduk->nik,
+            $penduduk->nama,
+            $penduduk->tempat_lahir,
+            $penduduk->tgl_lahir,
+            $penduduk->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan',
+            $penduduk->agama,
+            $penduduk->status_perkawinan,
+            $penduduk->pekerjaan,
+            $penduduk->alamat,
         ];
     }
 }

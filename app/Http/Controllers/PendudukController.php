@@ -5,24 +5,27 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Penduduk;
 use Illuminate\Support\Facades\Auth;
-use Maatwebsite\Excel\Facades\Excel; // WAJIB DITAMBAH BIAR BISA BACA EXCEL
+use Maatwebsite\Excel\Facades\Excel; // WAJIB BIAR BISA BACA EXCEL
+use App\Exports\PendudukExport; // WAJIB DIIMPORT UNTUK PROSES EXPORT DATA
 
 class PendudukController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Panggil query model
+        // 1. Panggil query model penduduk
         $query = Penduduk::query();
 
-        // 2. LOGIKA SEARCHING: Kalau ada input 'search', cari di database
-        if ($request->has('search') && $request->search != '') {
-            $keyword = $request->search;
-            $query->where('nama', 'LIKE', '%' . $keyword . '%')
-                ->orWhere('nik', 'LIKE', '%' . $keyword . '%');
+        // 2. LOGIKA SEARCHING: Diperketat agar tidak menjebak data jadi kosong
+        if ($request->filled('search')) {
+            $keyword = trim($request->search);
+            $query->where(function ($q) use ($keyword) {
+                $q->where('nama', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('nik', 'LIKE', '%' . $keyword . '%');
+            });
         }
 
-        // 3. Ambil data (diurutkan dari yang terbaru)
-        $penduduk = $query->latest()->get();
+        // 3. KUNCI RAPI: Urutkan data berdasarkan alfabet nama warga (A sampai Z)
+        $penduduk = $query->orderBy('nama', 'asc')->get();
 
         return view('admin.penduduk.index', compact('penduduk'));
     }
@@ -35,14 +38,14 @@ class PendudukController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama'            => 'required',
-            'nik'             => 'required|unique:penduduk,nik',
-            'tempat_lahir'    => 'required',
-            'tgl_lahir'       => 'required|date',
-            'jenis_kelamin'   => 'required',
-            'agama'           => 'required',
+            'nama'              => 'required',
+            'nik'               => 'required|unique:penduduk,nik',
+            'tempat_lahir'      => 'required',
+            'tgl_lahir'         => 'required|date',
+            'jenis_kelamin'     => 'required',
+            'agama'             => 'required',
             'status_perkawinan' => 'required',
-            'alamat'          => 'required'
+            'alamat'            => 'required'
         ]);
 
         try {
@@ -76,14 +79,14 @@ class PendudukController extends Controller
         $penduduk = Penduduk::findOrFail($id);
 
         $request->validate([
-            'nama'            => 'required',
-            'nik'             => 'required|unique:penduduk,nik,' . $id . ',id_penduduk',
-            'tempat_lahir'    => 'required',
-            'tgl_lahir'       => 'required|date',
-            'jenis_kelamin'   => 'required',
-            'agama'           => 'required',
+            'nama'              => 'required',
+            'nik'               => 'required|unique:penduduk,nik,' . $id . ',id_penduduk',
+            'tempat_lahir'      => 'required',
+            'tgl_lahir'         => 'required|date',
+            'jenis_kelamin'     => 'required',
+            'agama'             => 'required',
             'status_perkawinan' => 'required',
-            'alamat'          => 'required'
+            'alamat'            => 'required'
         ]);
 
         try {
@@ -112,21 +115,38 @@ class PendudukController extends Controller
         return redirect()->route('penduduk.index')->with('success', 'Data berhasil dihapus');
     }
 
-    // FUNGSI BARU: UNTUK IMPORT EXCEL
+    // FUNGSI IMPORT EXCEL (ANTI-MENTAL & AMAN)
     public function import(Request $request)
     {
-        // Validasi file yang masuk harus excel/csv
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv'
+            'file' => 'required'
+        ], [
+            'file.required' => 'Pilih file Excel/CSV terlebih dahulu!'
         ]);
 
         try {
-            // Proses file excel menggunakan class PendudukImport
-            Excel::import(new \App\Imports\PendudukImport, $request->file('file'));
+            $file = $request->file('file');
+            $ekstensi = strtolower($file->getClientOriginalExtension());
 
-            return redirect()->route('penduduk.index')->with('success', 'Ribuan data warga berhasil diimport dalam sekejap!');
+            if (!in_array($ekstensi, ['xlsx', 'xls', 'csv'])) {
+                return back()->with('error', 'Format file wajib .xlsx, .xls, atau .csv!');
+            }
+
+            Excel::import(new \App\Imports\PendudukImport, $file);
+
+            return redirect()->route('penduduk.index')->with('success', 'Selamat, data warga berhasil diimport ke sistem SIAPDE!');
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal import: Pastikan format kolom excel sesuai. Error: ' . $e->getMessage());
+            return back()->with('error', 'Proses Import Gagal! Error: ' . $e->getMessage());
+        }
+    }
+
+    // FUNGSI EXPORT DATA REALTIME (NEW FEATURE)
+    public function export()
+    {
+        try {
+            return Excel::download(new PendudukExport, 'Data_Penduduk_Desa_Realtime.xlsx');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Proses Export Excel Gagal! Error: ' . $e->getMessage());
         }
     }
 }

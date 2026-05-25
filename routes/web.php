@@ -5,6 +5,7 @@ use App\Http\Controllers\SuratController;
 use App\Http\Controllers\PendudukController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfilDesaController;
+use App\Http\Controllers\LaporanController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
@@ -67,4 +68,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cetak-surat/{id}', [SuratController::class, 'cetak'])->name('surat.cetak');
     Route::get('/export-surat', [SuratController::class, 'export'])->name('surat.export');
     Route::post('/penduduk/import', [PendudukController::class, 'import'])->name('penduduk.import');
+    Route::get('/export-penduduk', [PendudukController::class, 'export'])->name('penduduk.export');
+    Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+    Route::get('/laporan/cetak-pdf', [LaporanController::class, 'cetakPdf'])->name('laporan.cetak-pdf');
 });
