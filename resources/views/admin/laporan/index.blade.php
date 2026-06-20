@@ -8,42 +8,67 @@
         font-family: 'Poppins', sans-serif !important;
         background-color: #f4f7fe;
         min-height: 100vh;
-        display: flex;
-        flex-direction: column;
     }
 
-    .siapde-banner-header {
+    /* Header Rapi & Sejajar */
+    .siapde-page-header {
         background-color: #1a3a5c;
-        padding: 22px 25px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        padding: 20px 30px;
+        display: flex;
+        align-items: center;
+        border-bottom: 3px solid #2e86c1;
     }
 
-    .siapde-banner-header h2 {
+    .siapde-page-header h2 {
         color: white;
-        margin: 0 !important;
-        font-size: 15px;
+        margin: 0;
+        font-size: 18px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.8px;
+        letter-spacing: 1px;
     }
 
+    /* Info Bar */
+    .siapde-info-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: white;
+        border-bottom: 1px solid #e8eef6;
+        padding: 12px 30px;
+        font-size: 13px;
+        color: #555;
+        font-weight: 500;
+    }
+
+    .siapde-info-bar span {
+        font-size: 11px;
+        font-weight: 700;
+        color: #1a3a5c;
+        border: 1.5px solid #1a3a5c;
+        padding: 4px 14px;
+        border-radius: 20px;
+    }
+
+    /* Content & Card Rapi (Sudut Melengkung) */
     .siapde-content-container {
-        padding: 20px 25px;
-        box-sizing: border-box;
+        padding: 25px 30px;
     }
 
     .siapde-filter-card {
         background: white;
-        border-radius: 4px;
+        border-radius: 8px;
+        /* Sudut melengkung */
         padding: 24px;
         border: 1px solid #e8eef6;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        /* Shadow halus */
     }
 
     .siapde-form-group {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
     }
 
     .siapde-form-group label {
@@ -51,7 +76,6 @@
         font-weight: 700;
         color: #1a3a5c;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 
     .siapde-input-select {
@@ -62,15 +86,9 @@
         font-size: 13px;
         color: #334155;
         font-weight: 600;
-        outline: none;
         background: white;
-        width: 240px;
-        font-family: 'Poppins', sans-serif;
+        width: 220px;
         cursor: pointer;
-    }
-
-    .siapde-input-select:focus {
-        border-color: #2e86c1;
     }
 
     .siapde-btn-submit {
@@ -81,14 +99,12 @@
         border-radius: 4px;
         font-weight: 700;
         font-size: 11px;
-        letter-spacing: 0.5px;
         color: white;
         background-color: #2e86c1;
         border: none;
         cursor: pointer;
-        transition: background-color 0.2s;
         text-transform: uppercase;
-        font-family: 'Poppins', sans-serif;
+        gap: 8px;
     }
 
     .siapde-btn-submit:hover {
@@ -97,16 +113,22 @@
 </style>
 
 <div class="siapde-page-wrapper">
-    <div class="siapde-banner-header">
-        <h2>REKAPITULASI LAPORAN ADMINISTRASI DESA</h2>
+    <div class="siapde-page-header">
+        <h2>Rekapitulasi Laporan Administrasi Desa</h2>
+    </div>
+
+    <div class="siapde-info-bar">
+        <p style="margin:0">📄 Pilih periode untuk mengunduh laporan dalam format PDF.</p>
+        <span>LAPORAN BULANAN</span>
     </div>
 
     <div class="siapde-content-container">
         <div class="siapde-filter-card">
-            <form action="{{ route('laporan.cetak-pdf') }}" method="GET" target="_blank" style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+            <form action="{{ route('laporan.cetak-pdf') }}" method="GET" target="_blank"
+                style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
 
                 <div class="siapde-form-group">
-                    <label>TGL MULAI</label>
+                    <label>Bulan</label>
                     <select name="bulan" class="siapde-input-select">
                         <option value="">-- Semua Bulan --</option>
                         @foreach(['01'=>'Januari','02'=>'Februari','03'=>'Maret','04'=>'April','05'=>'Mei','06'=>'Juni','07'=>'Juli','08'=>'Agustus','09'=>'September','10'=>'Oktober','11'=>'November','12'=>'Desember'] as $key => $val)
@@ -116,7 +138,7 @@
                 </div>
 
                 <div class="siapde-form-group">
-                    <label>TGL SELESAI</label>
+                    <label>Tahun</label>
                     <select name="tahun" class="siapde-input-select">
                         @for($t = date('Y'); $t >= date('Y')-4; $t--)
                         <option value="{{ $t }}">{{ $t }}</option>
@@ -125,7 +147,7 @@
                 </div>
 
                 <button type="submit" class="siapde-btn-submit">
-                    <i class="fas fa-file-pdf" style="margin-right: 8px; font-size: 13px;"></i> GENERATE PDF LAPORAN
+                    <i class="fas fa-file-pdf"></i> Generate PDF Laporan
                 </button>
             </form>
         </div>

@@ -35,7 +35,7 @@ Route::post('/logout', function (Request $request) {
     return redirect('/login');
 })->name('logout');
 
-// --- ROUTE UNTUK SCAN QR CODE (Sudah dipindah ke sini agar bebas akses) ---
+// --- ROUTE UNTUK SCAN QR CODE ---
 Route::get('/cek-surat/{kode}', [SuratController::class, 'cekKeaslian'])->name('surat.cek_keaslian');
 
 
@@ -55,10 +55,18 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:admin,kepdes'])->group(function () {
         Route::resource('user', UserController::class);
         Route::resource('penduduk', PendudukController::class);
+
+        // =================================================================
+        // INI DIA RUTE SEARCH-NYA. WAJIB DI ATAS ROUTE RESOURCE SURAT
+        // =================================================================
+        Route::get('/surat/search-penduduk', [SuratController::class, 'searchPenduduk']);
+
         Route::resource('surat', SuratController::class);
 
         // --- RUTE PROFIL DESA ---
         Route::get('/profil-desa', [ProfilDesaController::class, 'index'])->name('profil.index');
+        Route::get('/profil-desa/edit', [ProfilDesaController::class, 'edit'])->name('profil.edit');
+        Route::put('/profil-desa/update', [ProfilDesaController::class, 'update'])->name('profil.update');
         Route::post('/profil-desa', [ProfilDesaController::class, 'store'])->name('profil.store');
     });
 

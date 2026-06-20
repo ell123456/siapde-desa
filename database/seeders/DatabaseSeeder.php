@@ -5,22 +5,33 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // Menghapus user admin lama jika ada (opsional agar tidak duplikat)
-        User::where('username', 'admin')->delete();
+        // Nonaktifkan foreign key check dulu
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        User::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        // Membuat User Admin Baru dengan Password Terenkripsi
+        // User Admin
         User::create([
+            'name'     => 'Administrator',
             'username' => 'admin',
-            'password' => Hash::make('admin123'), // <--- Ini kuncinya!
+            'password' => Hash::make('admin123'),
             'role'     => 'admin',
+            'status'   => 'aktif',
+        ]);
+
+        // User Kepala Desa
+        User::create([
+            'name'     => 'Kepala Desa',
+            'username' => 'kepdes',
+            'password' => Hash::make('kepdes123'),
+            'role'     => 'kepdes',
+            'status'   => 'aktif',
         ]);
     }
 }

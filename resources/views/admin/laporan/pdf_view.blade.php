@@ -4,7 +4,6 @@
 <head>
     <title>Laporan Data Surat</title>
     <style>
-        /* Standar Kertas Laporan A4 */
         @page {
             margin: 1cm 2cm;
         }
@@ -17,7 +16,6 @@
             color: #000;
         }
 
-        /* KOP SURAT IDENTIK */
         .kop-surat {
             width: 100%;
             border-bottom: 4px double #000;
@@ -39,7 +37,6 @@
         .text-cell h3 {
             margin: 0;
             font-size: 13pt;
-            font-weight: bold;
             text-transform: uppercase;
         }
 
@@ -53,22 +50,19 @@
         .text-cell p {
             margin: 3px 0 0 0;
             font-size: 9pt;
-            font-weight: bold;
             font-style: italic;
         }
 
-        /* JUDUL HALAMAN DINAMIS PER BULAN */
         .judul-halaman {
             text-align: center;
             font-weight: bold;
             text-decoration: underline;
-            margin: 20px 0;
+            margin: 20px 0 5px 0;
             font-size: 13pt;
             text-transform: uppercase;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
-        /* TABEL DATA */
         table.data-table {
             width: 100%;
             border-collapse: collapse;
@@ -94,26 +88,44 @@
             text-align: center;
         }
 
-        /* TANDA TANGAN */
-        .footer-ttd {
-            margin-top: 30px;
-            float: right;
-            width: 250px;
+        .rekap-table {
+            width: 55%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            font-size: 10pt;
+        }
+
+        .rekap-table th,
+        .rekap-table td {
+            border: 1px solid black;
+            padding: 5px 8px;
+        }
+
+        .rekap-table th {
+            background-color: #f2f2f2;
             text-align: center;
+            font-weight: bold;
         }
     </style>
 </head>
 
 <body>
-
     @php
     $bulanIndo = [
-    '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
-    '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
-    '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+    '01'=>'Januari','02'=>'Februari','03'=>'Maret','04'=>'April',
+    '05'=>'Mei','06'=>'Juni','07'=>'Juli','08'=>'Agustus',
+    '09'=>'September','10'=>'Oktober','11'=>'November','12'=>'Desember'
     ];
+
+    // Filter hanya yang selesai
+    $suratSelesai = $surats->where('status', 'selesai')->values();
+
+    // Hitung per jenis surat
+    $statistik = $suratSelesai->groupBy('jenis_surat');
+    $totalSemua = $suratSelesai->count();
     @endphp
 
+    {{-- KOP SURAT --}}
     <table class="kop-surat">
         <tr>
             <td class="logo-cell">
@@ -122,71 +134,100 @@
                 @endif
             </td>
             <td class="text-cell">
-                <h3>PEMERINTAH KABUPATEN XYZ</h3>
-                <h3>KECAMATAN XYZ</h3>
-                <h2>KANTOR KEPALA DESA XYZ</h2>
-                <p>Alamat: DI - XYZ - Kode Pos 0000</p>
+                <h3>PEMERINTAH KABUPATEN {{ strtoupper($profil->kabupaten ?? 'XYZ') }}</h3>
+                <h3>KECAMATAN {{ strtoupper($profil->kecamatan ?? 'XYZ') }}</h3>
+                <h2>KANTOR KEPALA DESA {{ strtoupper($profil->nama_desa ?? 'XYZ') }}</h2>
+                <p>Alamat: {{ $profil->alamat ?? 'Alamat Desa' }}</p>
             </td>
         </tr>
     </table>
 
-    {{-- KUNCI FILTER DINAMIS: Judul otomatis berganti mengikuti request form dropdown --}}
+    {{-- JUDUL --}}
     <div class="judul-halaman">
-        LAPORAN DATA SURAT PENGAJUAN
+        LAPORAN DATA PELAYANAN SURAT
         @if(!empty($bulan) && isset($bulanIndo[$bulan]))
-        <br><span style="font-size: 11pt; font-weight: normal; text-decoration: none;">PERIODE: {{ strtoupper($bulanIndo[$bulan]) }} {{ $tahun }}</span>
+        <br><span style="font-size: 11pt; font-weight: normal; text-decoration: none;">
+            Periode: {{ strtoupper($bulanIndo[$bulan]) }} {{ $tahun }}
+        </span>
         @else
-        <br><span style="font-size: 11pt; font-weight: normal; text-decoration: none;">PERIODE TAHUN: {{ $tahun }}</span>
+        <br><span style="font-size: 11pt; font-weight: normal; text-decoration: none;">
+            Periode Tahun {{ $tahun }}
+        </span>
         @endif
     </div>
 
+    {{-- TABEL DATA --}}
     <table class="data-table">
         <thead>
             <tr>
                 <th width="5%">No</th>
-                <th>Nama Penduduk / NIK</th>
-                <th width="25%">Jenis Surat</th>
+                <th width="30%">Nama Penduduk / NIK</th>
+                <th width="30%">Jenis Surat</th>
                 <th width="20%">Tanggal Pengajuan</th>
                 <th width="15%">Status</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($surats as $key => $item)
+            @forelse($suratSelesai as $key => $item)
             <tr>
                 <td class="text-center">{{ $key + 1 }}</td>
                 <td>
                     <div style="font-weight: bold; font-size: 10.5pt;">{{ strtoupper($item->penduduk->nama ?? 'Data Tidak Ditemukan') }}</div>
-                    <div style="color: #444; font-size: 8.5pt; margin-top: 2px;">NIK: {{ $item->penduduk->nik ?? '-' }}</div>
+                    <div style="font-size: 8.5pt; color: #444; margin-top: 2px;">NIK: {{ $item->penduduk->nik ?? '-' }}</div>
                 </td>
                 <td>{{ $item->jenis_surat }}</td>
                 <td class="text-center">
                     @php
-                    $tglInput = $item->tanggal_pengajuan ?? $item->created_at;
-                    $tgl = \Carbon\Carbon::parse($tglInput);
+                    $tgl = \Carbon\Carbon::parse($item->tanggal_pengajuan ?? $item->created_at);
                     echo $tgl->format('d') . ' ' . $bulanIndo[$tgl->format('m')] . ' ' . $tgl->format('Y');
                     @endphp
                 </td>
-                <td class="text-center" style="font-weight: bold;">{{ strtoupper($item->status) }}</td>
+                <td class="text-center" style="font-weight: bold;">SELESAI</td>
             </tr>
             @empty
             <tr>
                 <td colspan="5" class="text-center" style="padding: 30px; color: #666; font-style: italic;">
-                    Tidak ada data surat pengajuan pada periode ini.
+                    Tidak ada data surat yang selesai pada periode ini.
                 </td>
             </tr>
             @endforelse
         </tbody>
     </table>
 
-    <div class="footer-ttd">
-        @php
-        $tglSekarang = \Carbon\Carbon::now();
-        $hariIni = $tglSekarang->format('d') . ' ' . $bulanIndo[$tglSekarang->format('m')] . ' ' . $tglSekarang->format('Y');
-        @endphp
-        <p>Xyz, {{ $hariIni }}</p>
-        <p>Kepala Desa Xyz,</p>
-        <div style="height: 60px;"></div>
-        <p><strong>( ________________________ )</strong></p>
+    {{-- REKAPITULASI PER JENIS SURAT --}}
+    @if($totalSemua > 0)
+    <div style="margin-top: 25px;">
+        <div style="font-weight: bold; font-size: 11pt; margin-bottom: 8px; text-decoration: underline;">
+            REKAPITULASI SURAT PER JENIS
+        </div>
+        <table class="rekap-table">
+            <thead>
+                <tr>
+                    <th width="10%">No</th>
+                    <th>Jenis Surat</th>
+                    <th width="20%">Jumlah</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($statistik as $jenis => $kumpulan)
+                <tr>
+                    <td class="text-center">{{ $loop->iteration }}</td>
+                    <td>{{ $jenis }}</td>
+                    <td class="text-center">{{ $kumpulan->count() }}</td>
+                </tr>
+                @endforeach
+                <tr style="font-weight: bold; background-color: #f2f2f2;">
+                    <td colspan="2" style="text-align: right; padding-right: 10px;">TOTAL KESELURUHAN</td>
+                    <td class="text-center">{{ $totalSemua }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    @endif
+
+    {{-- INFO CETAK --}}
+    <div style="margin-top: 30px; font-size: 9pt; color: #666; font-style: italic;">
+        Dicetak pada: {{ \Carbon\Carbon::now()->format('d') . ' ' . $bulanIndo[\Carbon\Carbon::now()->format('m')] . ' ' . \Carbon\Carbon::now()->format('Y H:i') }} WIB
     </div>
 
 </body>

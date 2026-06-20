@@ -127,6 +127,104 @@
     .saring-select-kustom:focus {
         border-color: var(--sidebar-accent);
     }
+
+    /* CSS TAMBAHAN UNTUK LIST BERKAS DI ARSIP */
+    .berkas-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 0;
+        color: #374151;
+    }
+
+    .berkas-item i {
+        font-size: 10px;
+        flex-shrink: 0;
+    }
+
+    .berkas-link {
+        color: var(--sidebar-accent);
+        text-decoration: none;
+        font-weight: 700;
+        transition: 0.2s;
+        cursor: pointer;
+    }
+
+    .berkas-link:hover {
+        color: var(--sidebar-primary);
+        text-decoration: underline;
+    }
+
+    .keterangan-box {
+        min-width: 180px;
+    }
+
+    /* POPUP INTERNAL MODAL STYLE PREVIEW ARSIP */
+    .siapde-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(30, 41, 59, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .siapde-modal-card {
+        background: white;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 850px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        max-height: 85vh;
+        animation: modalSwoosh 0.25s ease-out;
+        overflow: hidden;
+    }
+
+    @keyframes modalSwoosh {
+        from {
+            transform: translateY(15px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .siapde-modal-header {
+        background: #f8f9fc;
+        padding: 16px 24px;
+        border-bottom: 1px solid #eaecf4;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .siapde-modal-body {
+        padding: 24px;
+        overflow-y: auto;
+        background: #f4f7fe;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 350px;
+    }
+
+    .siapde-modal-footer {
+        background: #f8f9fc;
+        padding: 14px 24px;
+        border-top: 1px solid #eaecf4;
+        display: flex;
+        justify-content: flex-end;
+    }
 </style>
 
 <div class="siapde-container-full">
@@ -180,8 +278,9 @@
                         <th class="fit-column" style="text-align: center;">NO</th>
                         <th class="fit-column" style="text-align: center;">NOMOR SURAT</th>
                         <th class="fit-column" style="text-align: center;">NIK</th>
-                        <th style="text-align: left;">NAMA PENDUDUK</th>
-                        <th style="text-align: left;">JENIS SURAT</th>
+                        <th style="text-align: left; width: 22%;">NAMA PENDUDUK</th>
+                        <th style="text-align: left; width: 18%;">JENIS SURAT</th>
+                        <th style="text-align: left; width: 18%;">BERKAS PENDUKUNG</th> {{-- KOLOM BARU --}}
                         <th class="fit-column" style="text-align: center;">STATUS</th>
                         <th class="fit-column" style="text-align: left;">TGL PROSES</th>
                         <th class="fit-column" style="text-align: center;">AKSI</th>
@@ -205,8 +304,43 @@
                         <td style="text-align: left;">
                             <span class="jenis-styling">{{ $item->jenis_surat }}</span>
                         </td>
+
+                        {{-- VALUE KOLOM BARU: MEMBACA BERKAS JSON LALU DIIKAT KE POPUP MODAL --}}
+                        <td>
+                            <div class="keterangan-box">
+                                @php
+                                $berkas = $item->berkas ?? [];
+                                if (is_string($berkas)) {
+                                $berkas = json_decode($berkas, true) ?? [];
+                                }
+                                @endphp
+
+                                @if(count($berkas) > 0)
+                                @foreach($berkas as $b)
+                                @php
+                                $namaberkas = is_array($b) ? ($b['nama'] ?? $b['name'] ?? '-') : $b->nama ?? '-';
+                                $filename = is_array($b) ? ($b['file'] ?? '') : $b->file ?? '';
+                                @endphp
+                                <div class="berkas-item">
+                                    <i class="fas fa-file-alt" style="font-size: 11px; color: #4e73df;"></i>
+                                    @if(!empty($filename))
+                                    <a href="javascript:void(0)" class="berkas-link" onclick="bukaModalPreview('{{ asset('uploads/berkas/' . $filename) }}', '{{ $namaberkas }}', '{{ $item->penduduk->nama ?? '-' }}', '{{ $item->jenis_surat }}')">
+                                        {{ $loop->iteration }}. {{ $namaberkas }} <i class="fas fa-eye" style="font-size: 9px; color: #94a3b8; margin-left: 1px;"></i>
+                                    </a>
+                                    @else
+                                    <span style="color: #858796;">{{ $loop->iteration }}. {{ $namaberkas }}</span>
+                                    @endif
+                                </div>
+                                @endforeach
+                                @else
+                                <span style="font-size: 11px; color: #b7b9cc; font-weight: 600;">
+                                    <i class="fas fa-minus" style="margin-right: 4px;"></i> Tidak ada berkas
+                                </span>
+                                @endif
+                            </div>
+                        </td>
+
                         <td class="fit-column" align="center">
-                            {{-- BADGE: Murni hanya untuk SELESAI --}}
                             <span style="padding: 6px 14px; border-radius: 6px; font-size: 10px; font-weight: 800; display: inline-block; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">
                                 {{ strtoupper($item->status) }}
                             </span>
@@ -227,7 +361,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" align="center" style="padding: 120px 0; color: #b7b9cc;">
+                        <td colspan="9" align="center" style="padding: 120px 0; color: #b7b9cc;">
                             <div style="margin-bottom: 20px;">
                                 <i class="fas fa-archive fa-4x" style="color: #dddfeb; opacity: 0.8;"></i>
                             </div>
@@ -238,6 +372,25 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL INTERNAL PREVIEW FILE ARSIP --}}
+<div class="siapde-modal-overlay" id="popupPreviewArsip">
+    <div class="siapde-modal-card">
+        <div class="siapde-modal-header">
+            <div>
+                <h5 id="modalTitleBerkas" style="margin: 0; font-weight: 800; color: var(--sidebar-primary); text-transform: uppercase; font-size: 15px; letter-spacing: 0.5px;">PREVIEW BERKAS ARSIP</h5>
+                <p id="modalSubTitleSurat" style="margin: 4px 0 0 0; font-size: 11.5px; color: #858796; font-weight: 600; text-transform: uppercase;"></p>
+            </div>
+            <button type="button" onclick="tutupModalPreview()" style="background: none; border: none; font-size: 20px; color: #b7b9cc; cursor: pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="siapde-modal-body" id="modalBodyContent">
+            {{-- Konten Gambar / PDF disuntik lewat Javascript --}}
+        </div>
+        <div class="siapde-modal-footer">
+            <button type="button" onclick="tutupModalPreview()" style="background: #6e707e; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer;">TUTUP PREVIEW</button>
         </div>
     </div>
 </div>
@@ -258,5 +411,29 @@
             });
         });
     });
+
+    // FUNGSI JAVASCRIPT POPUP PREVIEW ARSIP INTERNAL
+    function bukaModalPreview(fileUrl, namaBerkas, namaWarga, jenisSurat) {
+        document.getElementById('modalTitleBerkas').textContent = "MELIHAT ARSIP: " + namaBerkas;
+        document.getElementById('modalSubTitleSurat').textContent = "PEMOHON: " + namaWarga + " | JENIS: " + jenisSurat;
+
+        const bodyContent = document.getElementById('modalBodyContent');
+        bodyContent.innerHTML = '';
+
+        const fileExtension = fileUrl.split('.').pop().toLowerCase();
+
+        if (fileExtension === 'pdf') {
+            bodyContent.innerHTML = `<iframe src="${fileUrl}" style="width: 100%; height: 530px; border: none; border-radius: 8px;"></iframe>`;
+        } else {
+            bodyContent.innerHTML = `<img src="${fileUrl}" style="max-width: 100%; max-height: 500px; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">`;
+        }
+
+        document.getElementById('popupPreviewArsip').style.display = 'flex';
+    }
+
+    function tutupModalPreview() {
+        document.getElementById('popupPreviewArsip').style.display = 'none';
+        document.getElementById('modalBodyContent').innerHTML = '';
+    }
 </script>
 @endsection

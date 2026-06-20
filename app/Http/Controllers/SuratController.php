@@ -12,6 +12,26 @@ use Illuminate\Support\Str;
 class SuratController extends Controller
 {
     /**
+     * Helper untuk mendapatkan daftar 11 Jenis Surat (Biar dinamis & terpusat)
+     */
+    private function getDaftarSurat()
+    {
+        return [
+            'Surat Keterangan Domisili'             => 'Surat Keterangan Domisili',
+            'Surat Keterangan Usaha (SKU)'          => 'Surat Keterangan Usaha (SKU)',
+            'Surat Ahli Waris'                      => 'Surat Ahli Waris',
+            'Surat Pengantar KTP'                   => 'Surat Pengantar KTP',
+            'Surat Keterangan Tidak Mampu (SKTM)'   => 'Surat Keterangan Tidak Mampu (SKTM)',
+            'Surat Pengantar SKCK'                  => 'Surat Pengantar SKCK',
+            'Surat Keterangan Kelahiran'            => 'Surat Keterangan Kelahiran',
+            'Surat Keterangan Kematian'             => 'Surat Keterangan Kematian',
+            'Surat Keterangan Tanah'                => 'Surat Keterangan Tanah',
+            'Surat Keterangan Pindah Penduduk'      => 'Surat Keterangan Pindah Penduduk',
+            'Surat Keterangan Belum Memiliki Rumah' => 'Surat Keterangan Belum Memiliki Rumah',
+        ];
+    }
+
+    /**
      * Dashboard: Statistik & Ringkasan
      */
     public function dashboard()
@@ -28,6 +48,14 @@ class SuratController extends Controller
             ->whereMonth('created_at', date('m'))
             ->count() ?? 0;
 
+        // Data 12 bulan untuk grafik
+        $suratPerBulan = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $suratPerBulan[$i] = Surat::whereYear('created_at', date('Y'))
+                ->whereMonth('created_at', $i)
+                ->count();
+        }
+
         return view('admin.dashboard', compact(
             'totalPenduduk',
             'suratPending',
@@ -37,26 +65,18 @@ class SuratController extends Controller
             'jumlahLaki',
             'jumlahPerempuan',
             'suratHariIni',
-            'suratBulanIni'
+            'suratBulanIni',
+            'suratPerBulan'
         ));
     }
 
     /**
      * Index: Data Surat (Meja Kerja)
-     * LOGIKA: Sembunyikan 'selesai' agar meja kerja bersih, tapi tampilkan 'ditolak'
      */
     public function index(Request $request)
     {
-        $daftar_surat = [
-            'Surat Keterangan Usaha'       => 'Surat Keterangan Usaha',
-            'Surat Keterangan Tidak Mampu' => 'Surat Keterangan Tidak Mampu',
-            'Surat Keterangan Domisili'    => 'Surat Keterangan Domisili',
-            'Surat Pengantar SKCK'         => 'Surat Pengantar SKCK',
-            'Surat Pengantar KTP'          => 'Surat Pengantar KTP',
-            'Surat Keterangan Ahli Waris'  => 'Surat Keterangan Ahli Waris',
-            'Surat Keterangan Kelahiran'   => 'Surat Keterangan Kelahiran',
-            'Surat Keterangan Kematian'    => 'Surat Keterangan Kematian',
-        ];
+        // Ambil daftar surat dari fungsi terpusat
+        $daftar_surat = $this->getDaftarSurat();
 
         // LOGIKA: Sembunyikan 'selesai', tampilkan sisanya
         $query = Surat::with('penduduk')->whereNotIn('status', ['selesai']);
@@ -77,15 +97,48 @@ class SuratController extends Controller
     }
 
     /**
+     * Form Tambah Surat
+     */
+    public function create()
+    {
+        $penduduk = Penduduk::orderBy('nama', 'asc')->get();
+        $daftar_surat = $this->getDaftarSurat(); // Kirim list 11 surat ke view create
+
+        return view('admin.surat.create', compact('penduduk', 'daftar_surat'));
+    }
+
+    /**
      * Store: Simpan Surat Baru
      */
     public function store(Request $request)
     {
         $request->validate(['id_penduduk' => 'required', 'jenis_surat' => 'required']);
+
         $data = $request->all();
         $data['status'] = 'diajukan';
         $data['tanggal_pengajuan'] = date('Y-m-d');
+
+        $berkasData = [];
+
+        if ($request->hasFile('berkas')) {
+            foreach ($request->file('berkas') as $index => $file) {
+                if ($file->isValid()) {
+                    $namaBerkasAsli = $request->input("nama_berkas.$index") ?? 'Berkas';
+                    $filename = time() . '_' . $index . '.' . $file->getClientOriginalExtension();
+                    $file->move(public_path('uploads/berkas'), $filename);
+
+                    $berkasData[] = [
+                        'nama'   => $namaBerkasAsli,
+                        'file'   => $filename,
+                        'status' => 'lengkap'
+                    ];
+                }
+            }
+        }
+
+        $data['berkas'] = json_encode($berkasData);
         Surat::create($data);
+
         return redirect()->route('surat.index')->with('success', 'Surat berhasil diajukan!');
     }
 
@@ -122,9 +175,14 @@ class SuratController extends Controller
         return redirect()->back()->with('success', 'Surat disetujui!');
     }
 
-    public function tolak($id)
+    public function tolak(Request $request, $id)
     {
-        Surat::where('id_surat', $id)->update(['status' => 'ditolak', 'updated_at' => now()]);
+        Surat::where('id_surat', $id)->update([
+            'status' => 'ditolak',
+            'keterangan' => $request->keterangan ?? 'BERKAS KURANG / TIDAK VALID',
+            'updated_at' => now()
+        ]);
+
         return redirect()->back()->with('success', 'Permohonan ditolak.');
     }
 
@@ -163,28 +221,99 @@ class SuratController extends Controller
         return file_exists($path) ? 'data:image/png;base64,' . base64_encode(file_get_contents($path)) : '';
     }
 
-    public function create()
-    {
-        $penduduk = Penduduk::orderBy('nama', 'asc')->get();
-        return view('admin.surat.create', compact('penduduk'));
-    }
-
+    /**
+     * Form Edit Surat
+     */
     public function edit($id)
     {
         $surat = Surat::where('id_surat', $id)->firstOrFail();
         $penduduk = Penduduk::all();
-        return view('admin.surat.edit', compact('surat', 'penduduk'));
+        $daftar_surat = $this->getDaftarSurat(); // Kirim list 11 surat ke view edit
+
+        return view('admin.surat.edit', compact('surat', 'penduduk', 'daftar_surat'));
     }
 
+    /**
+     * Update: Menyimpan perubahan data surat
+     */
     public function update(Request $request, $id)
     {
-        Surat::where('id_surat', $id)->update($request->except(['_token', '_method']));
-        return redirect()->route('surat.index')->with('success', 'Data berhasil diperbarui!');
+        $surat = Surat::where('id_surat', $id)->firstOrFail();
+        $berkasData = [];
+        if (!empty($surat->berkas)) {
+            $berkasData = is_string($surat->berkas) ? json_decode($surat->berkas, true) : $surat->berkas;
+        }
+
+        if ($request->hasFile('berkas')) {
+            foreach ($request->file('berkas') as $index => $file) {
+                if ($file->isValid()) {
+                    $namaBerkasAsli = $request->input("nama_berkas.$index") ?? 'Berkas';
+                    $filename = time() . '_edit_' . $index . '.' . $file->getClientOriginalExtension();
+                    $file->move(public_path('uploads/berkas'), $filename);
+
+                    $ketemu = false;
+                    foreach ($berkasData as $key => $value) {
+                        if (($value['nama'] ?? '') === $namaBerkasAsli) {
+                            $berkasData[$key]['file'] = $filename;
+                            $berkasData[$key]['status'] = 'lengkap';
+                            $ketemu = true;
+                            break;
+                        }
+                    }
+
+                    if (!$ketemu) {
+                        $berkasData[] = [
+                            'nama'   => $namaBerkasAsli,
+                            'file'   => $filename,
+                            'status' => 'lengkap'
+                        ];
+                    }
+                }
+            }
+        }
+
+        $updateData = [
+            'jenis_surat' => $request->jenis_surat,
+            'keterangan'  => $request->keterangan,
+            'berkas'      => json_encode($berkasData),
+            'updated_at'  => now()
+        ];
+
+        if (strtolower($surat->status) == 'ditolak') {
+            $updateData['status'] = 'diajukan';
+            $updateData['keterangan'] = null;
+        }
+
+        $surat->update($updateData);
+
+        return redirect()->route('surat.index')->with('success', 'Data surat berhasil diperbarui!');
     }
 
     public function destroy($id)
     {
-        Surat::where('id_surat', $id)->delete();
+        $surat = Surat::where('id_surat', $id)->first();
+        if ($surat) {
+            $surat->delete();
+        }
         return redirect()->route('surat.index')->with('success', 'Data surat berhasil dihapus.');
+    }
+
+    public function searchPenduduk(Request $request)
+    {
+        $term = $request->term;
+        $data = Penduduk::where('nama', 'LIKE', "%$term%")
+            ->orWhere('nik', 'LIKE', "%$term%")
+            ->limit(15)
+            ->get(['id_penduduk', 'nik', 'nama']);
+
+        $results = [];
+        foreach ($data as $p) {
+            $results[] = [
+                'id' => $p->id_penduduk,
+                'text' => $p->nik . ' — ' . $p->nama
+            ];
+        }
+
+        return response()->json(['results' => $results]);
     }
 }

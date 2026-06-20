@@ -13,14 +13,16 @@ class Surat extends Model
     protected $primaryKey = 'id_surat'; // Kunci utama tabel kamu
     public $incrementing = true;
 
-    // TAMBAHKAN 'tte_code' DAN 'disetujui_at' DI SINI
+    // KUNCI PERBAIKAN: Menambahkan 'berkas' dan 'keterangan' agar diizinkan masuk ke database
     protected $fillable = [
         'id_penduduk',
         'jenis_surat',
         'status',
         'tanggal_pengajuan',
         'tte_code',      // Kode Unik QR untuk Tanda Tangan Digital
-        'disetujui_at'   // Waktu kapan Kepdes klik Setuju
+        'disetujui_at',   // Waktu kapan Kepdes klik Setuju
+        'berkas',        // <--- WAJIB ADA AGAR DATA UPLOAD BERKAS BISA MASUK DATABASE
+        'keterangan'     // <--- WAJIB ADA AGAR TEKS ALASAN DITOLAK BISA MASUK DATABASE
     ];
 
     /**

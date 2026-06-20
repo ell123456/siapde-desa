@@ -1,79 +1,60 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="container-fluid py-4" style="background-color: #f8f9fc; min-height: 100vh; font-family: 'Nunito', sans-serif;">
-    <div class="shadow-sm" style="border-radius: 15px; overflow: hidden; border: 1px solid #e3e6f0; background: white;">
+<div class="container-fluid py-4">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Profil Desa</h1>
+        <a href="{{ route('profil.edit') }}" class="btn btn-primary shadow-sm"><i class="fas fa-edit fa-sm text-white-50"></i> Edit Profil</a>
+    </div>
 
-        {{-- Header Biru --}}
-        <div style="background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); padding: 20px; color: white; text-align: center;">
-            <h2 style="margin: 0; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; font-size: 18px;">PENGATURAN PROFIL DESA</h2>
+    <div class="row">
+        {{-- Card Utama --}}
+        <div class="col-xl-12 col-md-12 mb-4">
+            <div class="card shadow h-100 py-2">
+                <div class="card-body">
+                    <h5 class="font-weight-bold text-primary">{{ $profil->nama_desa ?? 'Nama Desa Belum Diatur' }}</h5>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold">Visi</h6>
+                            <p>{{ $profil->visi ?? '-' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold">Misi</h6>
+                            <p>{{ $profil->misi ?? '-' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
 
-        {{-- Form Input --}}
-        <form action="{{ route('profil.store') }}" method="POST" style="padding: 30px;">
-            @csrf
-            @if(session('success'))
-            <div style="background: #d1fae5; color: #065f46; padding: 15px; border-radius: 100px; margin-bottom: 25px; font-weight: 700; font-size: 13px; border: 1px solid #a7f3d0; text-align: center;">
-                <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
-            </div>
-            @endif
+    {{-- PERSYARATAN DOKUMEN (DI SINI LU HARUS TAMBAHIN) --}}
+    <h6 class="m-0 font-weight-bold text-primary mb-3">DAFTAR PERSYARATAN DOKUMEN</h6>
+    <div class="row">
+        @php
+        $syaratList = [
+        ['t' => 'SKU', 'v' => $profil->syarat_sku ?? '-'],
+        ['t' => 'SKTM', 'v' => $profil->syarat_sktm ?? '-'],
+        ['t' => 'SKCK', 'v' => $profil->syarat_skck ?? '-'],
+        ['t' => 'KTP', 'v' => $profil->syarat_ktp ?? '-'],
+        ['t' => 'DOMISILI', 'v' => $profil->syarat_domisili ?? '-'],
+        ['t' => 'AHLI WARIS', 'v' => $profil->syarat_waris ?? '-'],
+        ['t' => 'KELAHIRAN', 'v' => $profil->syarat_lahir ?? '-'],
+        ['t' => 'KEMATIAN', 'v' => $profil->syarat_mati ?? '-']
+        ];
+        @endphp
 
-            <div class="row">
-                {{-- Identitas Desa --}}
-                <div class="col-md-12 mb-4">
-                    <label style="font-weight: 800; color: #4e73df; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 8px;">Nama Desa</label>
-                    <input type="text" name="nama_desa" class="form-control shadow-none" value="{{ $profil->nama_desa ?? '' }}" style="border-radius: 8px; border: 1px solid #d1d3e2; padding: 10px 15px;">
-                </div>
-
-                <div class="col-md-6 mb-4">
-                    <label style="font-weight: 800; color: #4e73df; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 8px;">Visi Desa</label>
-                    <textarea name="visi" class="form-control shadow-none" rows="3" style="border-radius: 8px; border: 1px solid #d1d3e2;">{{ $profil->visi ?? '' }}</textarea>
-                </div>
-
-                <div class="col-md-6 mb-4">
-                    <label style="font-weight: 800; color: #4e73df; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 8px;">Misi Desa</label>
-                    <textarea name="misi" class="form-control shadow-none" rows="3" style="border-radius: 8px; border: 1px solid #d1d3e2;">{{ $profil->misi ?? '' }}</textarea>
-                </div>
-
-                {{-- Row 1 Perangkat Desa --}}
-                <div class="col-md-4 mb-4">
-                    <label style="font-weight: 800; color: #1cc88a; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 8px;">Nama Kepala Desa</label>
-                    <input type="text" name="nama_kades" class="form-control shadow-none" value="{{ $profil->nama_kades ?? '' }}" style="border-radius: 8px; border: 1px solid #d1d3e2;">
-                </div>
-
-                <div class="col-md-4 mb-4">
-                    <label style="font-weight: 800; color: #1cc88a; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 8px;">Nama Sekretaris</label>
-                    <input type="text" name="nama_sekdes" class="form-control shadow-none" value="{{ $profil->nama_sekdes ?? '' }}" style="border-radius: 8px; border: 1px solid #d1d3e2;">
-                </div>
-
-                <div class="col-md-4 mb-4">
-                    <label style="font-weight: 800; color: #1cc88a; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 8px;">Nama Kaur Umum</label>
-                    <input type="text" name="nama_kaur" class="form-control shadow-none" value="{{ $profil->nama_kaur ?? '' }}" style="border-radius: 8px; border: 1px solid #d1d3e2;">
-                </div>
-
-                {{-- Row 2 Perangkat Desa (Tambahan Baru) --}}
-                <div class="col-md-4 mb-4">
-                    <label style="font-weight: 800; color: #1cc88a; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 8px;">Nama Bendahara</label>
-                    <input type="text" name="nama_bendahara" class="form-control shadow-none" value="{{ $profil->nama_bendahara ?? '' }}" style="border-radius: 8px; border: 1px solid #d1d3e2;">
-                </div>
-
-                <div class="col-md-4 mb-4">
-                    <label style="font-weight: 800; color: #1cc88a; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 8px;">Nama Kasi Pemerintahan</label>
-                    <input type="text" name="nama_kasi" class="form-control shadow-none" value="{{ $profil->nama_kasi ?? '' }}" style="border-radius: 8px; border: 1px solid #d1d3e2;">
-                </div>
-
-                <div class="col-md-4 mb-4">
-                    <label style="font-weight: 800; color: #1cc88a; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 8px;">Nama Kepala Dusun</label>
-                    <input type="text" name="nama_kadus" class="form-control shadow-none" value="{{ $profil->nama_kadus ?? '' }}" style="border-radius: 8px; border: 1px solid #d1d3e2;">
+        @foreach($syaratList as $item)
+        <div class="col-md-3 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="font-weight-bold text-warning text-uppercase mb-1" style="font-size: 12px;">{{ $item['t'] }}</div>
+                    <div class="text-xs text-gray-800">{{ $item['v'] }}</div>
                 </div>
             </div>
-
-            <div style="text-align: right; border-top: 1px solid #f1f3f9; padding-top: 20px;">
-                <button type="submit" style="background: #4e73df; color: white; border: none; padding: 12px 35px; border-radius: 50px; font-weight: 800; font-size: 12px; box-shadow: 0 4px 12px rgba(78, 115, 223, 0.2); transition: 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <i class="fas fa-save mr-2"></i> SIMPAN PROFIL DESA
-                </button>
-            </div>
-        </form>
+        </div>
+        @endforeach
     </div>
 </div>
 @endsection

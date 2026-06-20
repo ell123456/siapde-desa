@@ -6,9 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIAPDE | {{ $profil->nama_desa ?? 'Digital' }}</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    {{-- CDN --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
@@ -47,6 +48,7 @@
             display: flex;
             flex-direction: column;
             box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+            overflow-y: auto;
         }
 
         .sidebar-brand {
@@ -58,6 +60,7 @@
             background: rgba(0, 0, 0, 0.15);
             border-bottom: 1px solid rgba(255, 255, 255, 0.06);
             box-sizing: border-box;
+            flex-shrink: 0;
         }
 
         .sidebar-brand div {
@@ -117,6 +120,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-shrink: 0;
         }
 
         .sidebar-user-avatar {
@@ -203,7 +207,8 @@
 
             {{-- BRAND / LOGO --}}
             <div class="sidebar-brand">
-                <img src="{{ asset('logo-desa.png') }}" alt="Logo" style="width: 34px;">
+                <img src="{{ asset('logo-desa.png') }}" alt="Logo" style="width: 34px;"
+                    onerror="this.style.display='none'">
                 <div>SIAPDE</div>
             </div>
 
@@ -214,7 +219,7 @@
                 </div>
                 <div style="overflow: hidden;">
                     <div class="sidebar-user-name">
-                        {{ auth()->user()->username ?? 'Pengguna' }}
+                        {{ auth()->user()->name ?? auth()->user()->username ?? 'Pengguna' }}
                     </div>
                     <div class="sidebar-user-role">
                         {{ auth()->user()->role == 'kepdes' ? 'Kepala Desa' : 'Admin Sistem' }}
@@ -258,9 +263,8 @@
             </a>
             @endif
 
-            <a class="nav-link {{ request()->is('arsip-surat*') ? 'active' : '' }}" href="{{ url('/arsip-surat') }}">
-                <i class="fas fa-fw fa-archive"></i>
-                <span>Arsip Surat</span>
+            <a href="{{ url('/arsip-surat') }}" class="{{ Request::is('arsip-surat*') ? 'active' : '' }}">
+                <i class="fas fa-archive"></i> Arsip Surat
             </a>
 
             {{-- PENGATURAN SISTEM --}}
@@ -289,8 +293,10 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    {{-- CDN JS --}}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 
 </html>

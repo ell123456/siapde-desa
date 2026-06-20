@@ -1,7 +1,6 @@
 @extends('layouts.admin')
 
 @section('content')
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
     .siapde-dashboard-wrapper {
@@ -85,7 +84,7 @@
                 <i class="fas fa-info-circle mr-1"></i> Informasi Wilayah
             </div>
             <h1 style="font-weight: 800; font-size: 28px; color: #1a3a5c; margin: 0 0 5px 0; letter-spacing: -0.5px;">
-                Desaku {{ $profil->nama_desa ?? 'Digital' }}
+                Desa {{ $profil->nama_desa ?? 'Digital' }}
             </h1>
             <p style="margin: 0; color: #7a92a8; font-size: 13px;">Selamat datang di Pusat Administrasi Digital Terpadu.</p>
         </div>
@@ -127,7 +126,7 @@
                 <div style="background: #e6f1fb; color: #2e86c1; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px;">
                     <i class="fas fa-chart-pie"></i>
                 </div>
-                <h6 style="margin: 0; font-weight: 700; font-size: 11px; color: #1a3a5c; text-transform: uppercase; letter-spacing: 1px;">Grafik Warga</h6>
+                <h6 style="margin: 0; font-weight: 700; font-size: 11px; color: #1a3a5c; text-transform: uppercase; letter-spacing: 1px;">Grafik Penduduk</h6>
             </div>
             <div style="display: flex; align-items: center; justify-content: space-between; flex-grow: 1; gap: 15px; height: 200px;">
                 <div style="position: relative; width: 55%; height: 100%;">
@@ -192,7 +191,7 @@
     </div>
 
     {{-- 5. VISI & MISI --}}
-    <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 22px; align-items: stretch;">
+    <div style="display: grid; grid-template-columns: 1.3fr 1.7fr; gap: 22px; margin-bottom: 28px;">
         <div class="card-dashboard" style="display: flex; flex-direction: column;">
             <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 22px;">
                 <div style="background: #e6f1fb; color: #2e86c1; width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
@@ -232,147 +231,186 @@
             </div>
         </div>
     </div>
-</div>
 
-<script src="{{ asset('js/chart.js') }}"></script>
-<script>
-    function updateClock() {
-        const now = new Date();
-        const h = String(now.getHours()).padStart(2, '0');
-        const m = String(now.getMinutes()).padStart(2, '0');
-        const s = String(now.getSeconds()).padStart(2, '0');
-        const el = document.getElementById('clock-banner');
-        if (el) el.textContent = h + ':' + m + ':' + s;
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
+    {{-- 6. PERSYARATAN DOKUMEN (OTOMATIS DARI DATABASE) --}}
+    <div style="margin-bottom: 40px;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+            <div style="width: 4px; height: 16px; background: #2e86c1; border-radius: 10px;"></div>
+            <h6 style="font-weight: 700; font-size: 11px; color: #1a3a5c; text-transform: uppercase; letter-spacing: 1px; margin: 0;">Persyaratan Dokumen Pengajuan Surat</h6>
+        </div>
 
-    document.addEventListener("DOMContentLoaded", function() {
-        var dataLaki = Number("{{ $jumlahLaki ?? 0 }}");
-        var dataPerempuan = Number("{{ $jumlahPerempuan ?? 0 }}");
-        var totalPenduduk = Number("{{ $totalPenduduk ?? 0 }}");
-        var suratBulanIni = Number("{{ $suratBulanIni ?? 0 }}");
-        var currentMonthIdx = Number("{{ date('n') }}");
+        {{-- Grid diset 4 kolom agar 8 data tampil rapi (2 baris x 4 kolom) --}}
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+            @php
+            $syaratList = [
+            ['l' => 'Keterangan Usaha (SKU)', 'k' => 'syarat_sku', 'i' => 'fa-store'],
+            ['l' => 'Tidak Mampu (SKTM)', 'k' => 'syarat_sktm', 'i' => 'fa-hand-holding-heart'],
+            ['l' => 'Pengantar SKCK', 'k' => 'syarat_skck', 'i' => 'fa-user-shield'],
+            ['l' => 'Pengantar KTP', 'k' => 'syarat_ktp', 'i' => 'fa-address-card'],
+            ['l' => 'Keterangan Domisili', 'k' => 'syarat_domisili', 'i' => 'fa-home'],
+            ['l' => 'Ahli Waris', 'k' => 'syarat_waris', 'i' => 'fa-scroll'],
+            ['l' => 'Kelahiran', 'k' => 'syarat_lahir', 'i' => 'fa-baby'],
+            ['l' => 'Kematian', 'k' => 'syarat_mati', 'i' => 'fa-file-medical'],
+            ['l' => 'Belum Memiliki Rumah', 'k' => 'syarat_belum_rumah', 'i' => 'fa-house-crack'],
+            ['l' => 'Pindah Penduduk', 'k' => 'syarat_pindah', 'i' => 'fa-truck-moving'],
+            ['l' => 'Keterangan Tanah', 'k' => 'syarat_tanah', 'i' => 'fa-mountain-sun'],
+            ];
+            @endphp
 
-        var dataBulanan = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        dataBulanan[currentMonthIdx - 1] = suratBulanIni;
+            @foreach($syaratList as $s)
+            <div style="background: white; padding: 20px; border-radius: 16px; border: 1px solid #e8eef6; display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; border-bottom: 1px dashed #e8eef6; padding-bottom: 10px;">
+                    <div style="background: #e6f1fb; color: #2e86c1; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px;">
+                        <i class="fas {{ $s['i'] }}"></i>
+                    </div>
+                    <div style="font-size: 13px; font-weight: 800; color: #1a3a5c;">{{ $s['l'] }}</div>
+                </div>
+                <div style="font-size: 12px; color: #64748b; line-height: 1.8; font-weight: 600; white-space: pre-line;">
+                    {{-- Data otomatis diambil dari kolom database yang sesuai --}}
+                    {{ $profil->{$s['k']} ?? 'Belum diatur' }}
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
 
-        // GRAFIK DONUT PENDUDUK
-        var ctxJk = document.getElementById('chartJkSIAPDE').getContext('2d');
-        new Chart(ctxJk, {
-            type: 'doughnut',
-            data: {
-                labels: ['Laki-laki', 'Perempuan'],
-                datasets: [{
-                    data: [dataLaki, dataPerempuan],
-                    backgroundColor: ['#2e86c1', '#e67e22'],
-                    borderWidth: 2,
-                    hoverBorderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+    <script src="{{ asset('js/chart.js') }}"></script>
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            const el = document.getElementById('clock-banner');
+            if (el) el.textContent = h + ':' + m + ':' + s;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var dataLaki = Number("{{ $jumlahLaki ?? 0 }}");
+            var dataPerempuan = Number("{{ $jumlahPerempuan ?? 0 }}");
+            var totalPenduduk = Number("{{ $totalPenduduk ?? 0 }}");
+
+            // Data 12 bulan dari controller
+            var dataBulanan = @json(array_values($suratPerBulan));
+
+            // GRAFIK DONUT PENDUDUK
+            var ctxJk = document.getElementById('chartJkSIAPDE').getContext('2d');
+            new Chart(ctxJk, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Laki-laki', 'Perempuan'],
+                    datasets: [{
+                        data: [dataLaki, dataPerempuan],
+                        backgroundColor: ['#2e86c1', '#e67e22'],
+                        borderWidth: 2,
+                        hoverBorderColor: '#ffffff'
+                    }]
                 },
-                cutout: '75%'
-            },
-            plugins: [{
-                id: 'centerText',
-                beforeDraw: function(chart) {
-                    if (chart.getDatasetMeta(0).data[0]) {
-                        var ctx = chart.ctx;
-                        var x = chart.getDatasetMeta(0).data[0].x;
-                        var y = chart.getDatasetMeta(0).data[0].y;
-                        ctx.save();
-                        ctx.font = "bold 24px Poppins";
-                        ctx.textBaseline = "middle";
-                        ctx.textAlign = "center";
-                        ctx.fillStyle = "#1a3a5c";
-                        ctx.fillText(totalPenduduk, x, y - 8);
-                        ctx.font = "700 9px Poppins";
-                        ctx.fillStyle = "#94a3b8";
-                        ctx.fillText("TOTAL JIWA", x, y + 13);
-                        ctx.restore();
-                    }
-                }
-            }]
-        });
-
-        // GRAFIK BAR SURAT TAHUNAN
-        var ctxSurat = document.getElementById('chartSuratSIAPDE').getContext('2d');
-        new Chart(ctxSurat, {
-            type: 'bar',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
-                datasets: [{
-                    label: 'Jumlah Berkas',
-                    data: dataBulanan,
-                    backgroundColor: ['#2e86c1'],
-                    borderRadius: 10
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                layout: {
-                    padding: {
-                        top: 25
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1,
-                            font: {
-                                family: 'Poppins',
-                                size: 11
-                            }
-                        },
-                        grid: {
-                            color: '#f0f6fc'
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
                         }
                     },
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            font: {
-                                family: 'Poppins',
-                                size: 12,
-                                weight: '700'
+                    cutout: '75%'
+                },
+                plugins: [{
+                    id: 'centerText',
+                    beforeDraw: function(chart) {
+                        if (chart.getDatasetMeta(0).data[0]) {
+                            var ctx = chart.ctx;
+                            var x = chart.getDatasetMeta(0).data[0].x;
+                            var y = chart.getDatasetMeta(0).data[0].y;
+                            ctx.save();
+                            ctx.font = "bold 24px Poppins";
+                            ctx.textBaseline = "middle";
+                            ctx.textAlign = "center";
+                            ctx.fillStyle = "#1a3a5c";
+                            ctx.fillText(totalPenduduk, x, y - 8);
+                            ctx.font = "700 9px Poppins";
+                            ctx.fillStyle = "#94a3b8";
+                            ctx.fillText("TOTAL JIWA", x, y + 13);
+                            ctx.restore();
+                        }
+                    }
+                }]
+            });
+
+            // GRAFIK BAR SURAT TAHUNAN
+            var ctxSurat = document.getElementById('chartSuratSIAPDE').getContext('2d');
+            new Chart(ctxSurat, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+                    datasets: [{
+                        label: 'Jumlah Berkas',
+                        data: dataBulanan,
+                        backgroundColor: ['#2e86c1'],
+                        borderRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 25
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    family: 'Poppins',
+                                    size: 11
+                                }
                             },
-                            color: '#1a3a5c'
+                            grid: {
+                                color: '#f0f6fc'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    family: 'Poppins',
+                                    size: 12,
+                                    weight: '700'
+                                },
+                                color: '#1a3a5c'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
                         }
                     }
                 },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            },
-            plugins: [{
-                id: 'barLabels',
-                afterDatasetsDraw: function(chart) {
-                    chart.data.datasets.forEach(function(dataset, i) {
-                        chart.getDatasetMeta(i).data.forEach(function(bar, index) {
-                            var ctx = chart.ctx;
-                            ctx.fillStyle = '#1a3a5c';
-                            ctx.font = "bold 13px Poppins";
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'bottom';
-                            ctx.fillText(dataset.data[index], bar.x, bar.y - 5);
+                plugins: [{
+                    id: 'barLabels',
+                    afterDatasetsDraw: function(chart) {
+                        chart.data.datasets.forEach(function(dataset, i) {
+                            chart.getDatasetMeta(i).data.forEach(function(bar, index) {
+                                var ctx = chart.ctx;
+                                ctx.fillStyle = '#1a3a5c';
+                                ctx.font = "bold 13px Poppins";
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                ctx.fillText(dataset.data[index], bar.x, bar.y - 5);
+                            });
                         });
-                    });
-                }
-            }]
+                    }
+                }]
+            });
         });
-    });
-</script>
-@endsection
+    </script>
+    @endsection
